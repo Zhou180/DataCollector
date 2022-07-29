@@ -27,7 +27,7 @@ def retry_fetch_ohlcv(exchange, max_retries, symbol, timeframe, since, limit):
         if num_retries > max_retries:
             raise  # Exception('Failed to fetch', timeframe, symbol, 'OHLCV in', max_retries, 'attempts')
 
-def scrape_ohlcv(exchange, max_retries, symbol, timeframe, since, limit):
+def scrape_ohlcv(exchange: str, max_retries: int, symbol: str, timeframe: str, since: str, limit: int) -> object:
     earliest_timestamp = exchange.milliseconds()
     timeframe_duration_in_seconds = exchange.parse_timeframe(timeframe)
     timeframe_duration_in_ms = timeframe_duration_in_seconds * 1000
@@ -67,9 +67,12 @@ def scrape_symbol(exchange_id, max_retries, symbol, timeframe, since, limit, dat
     ohlcv = scrape_ohlcv(exchange, max_retries, symbol, timeframe, since, limit)
     # convert list to dataframe
     ohlcv = listToDataframe(ohlcv) if ohlcv else None
-    # remove rows with duplicate indices
-    return ohlcv[~ohlcv.index.duplicated(keep='first')] if ohlcv else None
+    #　return ohlcv
+    if ohlcv is not None:
+        # remove rows with duplicate indices
+        ohlcv = ohlcv[~ohlcv.index.duplicated(keep='first')]
 
+    return ohlcv
 
 def scrape_multiple_symbols(exchange_id, max_retries, symbols, timeframe, since, limit, data_type):
     # instantiate the exchange by id
@@ -100,7 +103,3 @@ def scrape_multiple_symbols(exchange_id, max_retries, symbols, timeframe, since,
             klines_dict[symbol] = temp_data_df
     # return klines_dict
     return klines_dict
-
-if __name__ == '__main__':
-    trading_pairs = ['KEEPUSDT', 'ETHUSDT']
-    klines_dict = scrape_multiple_symbols("binance", 3, trading_pairs, "4h", '2022-01-01 00:00:00Z', 100, 'spot')
